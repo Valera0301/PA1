@@ -49,7 +49,6 @@ function ShaderProgram(name, program) {
 }
 
 // Функція для створення даних поверхні Неовія
-// Спочатку будується верхня півсфера, потім нижня
 function CreateNeoviusSurfaceData() {
     const vertexList = [];
     const step = 0.3; // Крок для точності побудови
@@ -140,6 +139,30 @@ function CreateNeoviusSurfaceData() {
     return vertexList.concat(lowerHemisphere);
 }
 
+function CreateDirectionLines() {
+    const arrowVertices = {
+        u: [], // Вершини для напряму u
+        v: []  // Вершини для напряму v
+    };
+    const scale = 5.0; // Масштаб довжини стрілки
+
+    // Початкова точка на поверхні
+    const x = 0;
+    const y = 0;
+    const z = 0;
+
+    // Додати стрілку для напряму u (червона)
+    arrowVertices.u.push(x, y, z, x + scale, y, z);
+
+    // Додати стрілку для напряму v (синя)
+    arrowVertices.v.push(x, y, z, x, y + scale, z);
+
+    return arrowVertices;
+}
+
+let uDirectionLine;
+let vDirectionLine;
+
 // Функція для ініціалізації контексту WebGL та шейдерної програми
 function initGL() {
     let prog = createProgram(gl, vertexShaderSource, fragmentShaderSource);
@@ -154,6 +177,14 @@ function initGL() {
 
     surface = new Model('Neovius Surface');
     surface.BufferData(CreateNeoviusSurfaceData());
+    
+    const directionLines = CreateDirectionLines();
+
+    uDirectionLine = new Model('uDirectionLine');
+    uDirectionLine.BufferData(directionLines.u);
+
+    vDirectionLine = new Model('vDirectionLine');
+    vDirectionLine.BufferData(directionLines.v);
 
     gl.enable(gl.DEPTH_TEST); // Увімкнення тесту глибини для коректного відображення поверхні
 }
@@ -204,6 +235,13 @@ function draw() {
     gl.uniform4fv(shProgram.iColor, [1, 1, 0, 1]); // Встановлення кольору для малювання
 
     surface.Draw();
+    // Рендер u-лінії (червона)
+    gl.uniform4fv(shProgram.iColor, [1.0, 0.0, 0.0, 1.0]);
+    uDirectionLine.Draw();
+    
+    // Рендер v-лінії (синя)
+    gl.uniform4fv(shProgram.iColor, [0.0, 0.0, 1.0, 1.0]);
+    vDirectionLine.Draw();
 }
 
 // Ініціалізація при завантаженні сторінки
